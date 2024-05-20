@@ -1,42 +1,15 @@
-<template>
-  <h1>LinkHub</h1>
-  <nav>
-    <RouterLink to="/">Home</RouterLink>
-    <RouterLink to="/about">About</RouterLink>
-  </nav>
-  <div>
-    <RouterView />
-    <hr>
-    <p>title / url / description</p>
-    <ul>
-      <li v-for="url in urls" :key="url.id">
-        <input type="text" v-model="url.title">
-        <input type="text" v-model="url.url">
-        <input type="text" v-model="url.description">
-        <button @click="updateURL(url.id, url.title, url.url, url.description)">Save</button>
-        <button @click="deleteURL(url.id)">Delete</button>
-      </li>
-    </ul>
-    <input type="text" v-model="newTitle">
-    <input type="text" v-model="newUrl">
-    <input type="text" v-model="newDescription">
-    <button @click="addURL">Add url</button>
-  </div>
-</template>
 
-<script setup>
+
 import { ref, onMounted } from 'vue'
-import { supabase } from './config/dbconfig/supabaseClient.js'
-import { RouterLink, RouterView } from 'vue-router'
-// import { getURL, addURL, updateURL, deleteURL  } from './service/crud.js';
+import { supabase } from '../config/dbconfig/supabaseClient.js'
 
-const urls = ref([])
-const newTitle = ref('')
-const newUrl = ref('')
-const newDescription = ref('')
+// const urls = ref([])
+// const newTitle = ref('')
+// const newUrl = ref('')
+// const newDescription = ref('')
 
 // 컴포넌트가 마운트될 때 데이터를 가져오는 함수
-async function getURL() {
+export async function getURL() {
   const { data } = await supabase.from('linkhub_test').select()
   if (data) {
     urls.value = data.map(url => ({
@@ -46,14 +19,15 @@ async function getURL() {
       description: url.description,
     }))
   }
+  return urls
 }
 
 // 컴포넌트가 마운트될 때 데이터를 가져옴
-onMounted(() => {
-  getURL() // getURL 함수를 사용하여 데이터를 가져옵니다.
-})
+// onMounted(() => {
+//   getURL()
+// })
 // 새로운 URL을 추가하는 함수
-async function addURL() {
+export async function addURL() {
   if (newTitle.value.trim() !== '' && newUrl.value.trim() !== '' && newDescription.value.trim() !== '') {
     const { data, error } = await supabase.from('linkhub_test').insert([{ title: newTitle.value, url: newUrl.value, description: newDescription.value }])
         console.log("data1", data)
@@ -74,7 +48,7 @@ async function addURL() {
 }
 
 // URL을 업데이트하는 함수
-async function updateURL(id, newTitle, newUrl, newDescription) {
+export async function updateURL(id, newTitle, newUrl, newDescription) {
   const { data, error } = await supabase.from('linkhub_test').update({ title: newTitle, url: newUrl, description: newDescription }).eq('id', id)
   if (error) {
     console.error('Error updating url:', error.message)
@@ -92,7 +66,7 @@ async function updateURL(id, newTitle, newUrl, newDescription) {
 }
 
 // URL을 삭제하는 함수
-async function deleteURL(id) {
+export async function deleteURL(id) {
   const { error } = await supabase.from('linkhub_test').delete().eq('id', id)
   if (error) {
     console.error('Error deleting url:', error.message)
@@ -100,11 +74,3 @@ async function deleteURL(id) {
     urls.value = urls.value.filter(url => url.id !== id)
   }
 }
-
-</script>
-
-<style scoped>
-nav a {
-  margin: .5rem;
-}
-</style>
