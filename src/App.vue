@@ -1,13 +1,40 @@
+<template>
+  <h1>LinkHub</h1>
+  <nav>
+    <RouterLink to="/">Home</RouterLink>
+    <RouterLink to="/about">About</RouterLink>
+  </nav>
+  <div>
+    <RouterView />
+    <hr>
+    <ul>
+      <li v-for="country in countries" :key="country.id">
+        <input type="text" v-model="country.tempName">
+        <button @click="updateCountry(country.id, country.tempName)">Save</button>
+        <button @click="deleteCountry(country.id)">Delete</button>
+      </li>
+    </ul>
+    <input type="text" v-model="newName">
+    <button @click="addCountry">Add Country</button>
+  </div>
+</template>
+
 <script setup>
 import { ref } from 'vue'
 import { supabase } from './config/dbconfig/supabaseClient.js'
+import { RouterLink, RouterView } from 'vue-router'
 
 const countries = ref([])
 const newName = ref('')
 
 async function getCountries() {
   const { data } = await supabase.from('countries').select()
-  countries.value = data
+  if (data) {
+    countries.value = data.map(country => ({
+      ...country,
+      tempName: country.name // 임시 이름 필드를 추가합니다.
+    }))
+  }
 }
 
 async function addCountry() {
@@ -17,7 +44,7 @@ async function addCountry() {
       console.error('Error adding country:', error.message)
     } else {
       if (data && data.length > 0) {
-        countries.value.push(data[0])
+        countries.value.push({ ...data[0], tempName: data[0].name })
         newName.value = ''
         await getCountries() // 추가된 데이터를 다시 가져옴
       }
@@ -35,6 +62,7 @@ async function updateCountry(id, newName) {
     const index = countries.value.findIndex(country => country.id === id)
     if (index !== -1) {
       countries.value[index].name = newName
+      countries.value[index].tempName = newName
     }
   }
 }
@@ -51,16 +79,8 @@ async function deleteCountry(id) {
 getCountries() // 컴포넌트가 마운트될 때 데이터를 가져옴
 </script>
 
-<template>
-  <h1>LinkHub</h1>
-  <div>
-    <ul>
-      <li v-for="country in countries" :key="country.id">
-        <input type="text" v-model="country.name" @blur="updateCountry(country.id, country.name)">
-        <button @click="deleteCountry(country.id)">Delete</button>
-      </li>
-    </ul>
-    <input type="text" v-model="newName">
-    <button @click="addCountry">Add Country</button>
-  </div>
-</template>
+<style scoped>
+nav a {
+  margin: .5rem;
+}
+</style>
